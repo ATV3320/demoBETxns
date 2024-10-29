@@ -61,8 +61,8 @@ function App() {
       setTxStatus('Sending transaction...');
       
       const tx = await contract.bookToken(
-        "0x8Cb342cE3d66b5450FE43734cd361702Aa506DD9",
-        "0x8Cb342cE3d66b5450FE43734cd361702Aa506DD9",
+        "0x82a064e98c5fa88bff67Bc27B755aC3c0E77EA0D",
+        "0x82a064e98c5fa88bff67Bc27B755aC3c0E77EA0D",
         "1000"
       );
 
@@ -312,7 +312,7 @@ function App() {
           boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
         }}>
           <a 
-            href={`https://amoy.technology/tx/${txHash}`}
+            href={`https://suite.camino.network/explorer/columbus/c-chain/tx/${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -325,7 +325,7 @@ function App() {
               }
             }}
           >
-            View transaction on Amoy Explorer
+            View transaction on Columbus(Camino) Explorer
           </a>
         </div>
       )}
