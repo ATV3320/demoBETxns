@@ -1,5 +1,5 @@
 import './App.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from './abi/contract';
 import Confetti from 'react-confetti';
@@ -11,6 +11,7 @@ function App() {
   const [bookingId, setBookingId] = useState(null);
   const [completeId, setCompleteId] = useState('');
   const [releasedAmount, setReleasedAmount] = useState(null);
+  const [balances, setBalances] = useState([0, 0]); // Store balances for person1 and person2
 
   const triggerConfetti = () => {
     setShowConfetti(true);
@@ -47,6 +48,26 @@ function App() {
     setCompleteId('');
   };
 
+  const fetchBalances = async () => {
+    try {
+      const provider = await getProvider();
+      const wallet = new ethers.Wallet(process.env.REACT_APP_PRIVATE_KEY, provider);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, wallet);
+
+      // Call the constantBalances function
+      const [balance1, balance2] = await contract.constantBalances();
+      setBalances([balance1, balance2]); // Store the balances
+    } catch (error) {
+      console.error('Error fetching balances:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBalances(); // Fetch balances on mount
+    const interval = setInterval(fetchBalances, 10000); // Refresh every 10 seconds
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, []);
+
   const handleBookToken = async () => {
     try {
       setTxStatus('Initiating transaction...');
@@ -61,8 +82,8 @@ function App() {
       setTxStatus('Sending transaction...');
       
       const tx = await contract.bookToken(
-        "0x82a064e98c5fa88bff67Bc27B755aC3c0E77EA0D",
-        "0x82a064e98c5fa88bff67Bc27B755aC3c0E77EA0D",
+        "0x0000000000000000000000000000000000000001",
+        "0x0000000000000000000000000000000000000002",
         "1000"
       );
 
@@ -75,6 +96,7 @@ function App() {
       
       setTxStatus('Transaction confirmed! Booking successful!');
       triggerConfetti();
+      await fetchBalances(); // Refresh balances immediately after transaction
 
       setTimeout(clearAllData, 30000);
 
@@ -112,6 +134,7 @@ function App() {
       
       setTxStatus('Release transaction confirmed!');
       triggerConfetti();
+      await fetchBalances(); // Refresh balances immediately after transaction
 
       setTimeout(clearAllData, 30000);
 
@@ -126,7 +149,7 @@ function App() {
     <div style={{
       width: '100vw',
       height: '100vh',
-      background: 'linear-gradient(135deg, #1a4a3c 0%, #2d6b58 50%, #1a4a3c 100%)',
+      background: '#B0C4DE', // Bluish grey background
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -137,12 +160,11 @@ function App() {
       padding: '20px',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)',
       boxShadow: 'inset 0 0 100px rgba(255, 255, 255, 0.1)'
     }}>
       <img 
-        src="https://property.bakuun.com/img/logo_big.png" 
-        alt="Logo" 
+        src="https://property.bakuun.com/img/logo_big.png" // Updated logo
+        alt="Bakuun Logo" 
         style={{
           maxWidth: '180px',
           marginBottom: '30px',
@@ -193,8 +215,9 @@ function App() {
           fontWeight: '600',
           letterSpacing: '0.5px',
           marginBottom: '30px',
+          transform: 'translateY(2px)', // 3D effect
           ':hover': {
-            transform: 'translateY(-2px)',
+            transform: 'translateY(0px)',
             boxShadow: '0 6px 20px rgba(99, 102, 241, 0.4)',
           }
         }}>
@@ -242,15 +265,16 @@ function App() {
             transition: 'all 0.3s ease',
             fontWeight: '600',
             letterSpacing: '0.5px',
+            transform: 'translateY(2px)', // 3D effect
             ':hover': {
-              transform: 'translateY(-2px)',
+              transform: 'translateY(0px)',
               boxShadow: '0 6px 20px rgba(52, 211, 153, 0.4)',
             }
           }}>
           Complete
         </button>
       </div>
-      
+
       {txStatus && (
         <div style={{
           marginTop: '20px',
@@ -329,6 +353,22 @@ function App() {
           </a>
         </div>
       )}
+
+      {/* New Balance Module */}
+      <div style={{
+        marginTop: '20px',
+        padding: '20px 30px', // Increased padding for a larger box
+        borderRadius: '12px',
+        backgroundColor: '#D3D3D3', // Whitish grey background
+        color: 'black',
+        fontSize: '16px',
+        fontWeight: 'bold',
+        lineHeight: '1.5',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)', // 3D effect
+      }}>
+        <p style={{ margin: 0 }}>Client Balance: {balances[0] !== undefined ? balances[0].toString() : 'Loading...'}</p>
+        <p style={{ margin: 0 }}>Hotel Account Balance: {balances[1] !== undefined ? balances[1].toString() : 'Loading...'}</p>
+      </div>
     </div>
   );
 }
